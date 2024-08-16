@@ -3,8 +3,6 @@ const { genHash, compareHash } = require("../../utils/secure");
 const { genOTP, genToken } = require("../../utils/token");
 const { sendEmail } = require("../../services/mailer");
 
-const create = (payload) => {};
-
 const register = async (payload) => {
   const { password, roles, isActive, ...rest } = payload;
   // Check if user email already exists or not
@@ -67,14 +65,100 @@ const login = async (payload) => {
   return genToken(data);
 };
 
-const genForgetPasswordToken = () => {};
-const verifyForgetPasswordToken = () => {};
-const changePassword = () => {};
-const resetPassword = () => {};
-const blockUser = () => {};
+const genForgetPasswordToken = async ({ email }) => {
+  // 2. check email for user; isBlocked; isActive?
+  const user = await Model.findOne({ email, isActive: true, isBlocked: false });
+  if (!user) throw new Error("User not found");
+  // 3. generate new token
+  const myToken = genOTP();
+  // 4. store token in database in user data
+  await Model.updateOne({ email }, { token: myToken });
+  // 5. Send token to user email
+  const isEmailSent = await genEmailToken({
+    to: user?.email,
+    subject: "Forget Passsword for XYZ Hotel Management",
+    msg: `<h1>Your Forget Password Token is ${myToken}</h1>`,
+  });
+  if (!isEmailSent) throw new Error("User email sending failed...");
+  return { data: null, msg: "Please check your email for token" };
+};
+
+const verifyForgetPasswordToken = async ({ email, token, newPassword }) => {
+  // 1. check email for user
+  const user = await Model.findOne({ email, isActive: true, isBlocked: false });
+  if (!user) throw new Error("User not found");
+  // 2. check token for user
+  const isValidToken = token === user?.token;
+  if (!isValidToken) throw new Error("Token mismatch");
+  // 3. token match; newPassword hash
+  const password = genHash(newPassword);
+  // 4. update the user data with new password hash and empty token field
+  const updatedUser = await Model.updateOne({ email }, { password, token: "" });
+  if (!updatedUser) throw new Error("Forget Password Change failed"); // TODO fix minor issue
+  return { data: null, msg: "Password Changed Successfully" };
+};
+
+const changePassword = async ({ email, oldPassword, newPassword }) => {
+  //1. find the user using email; isBlocked; isActive
+  const user = await Model.findOne({ email, isActive: true, isBlocked: false });
+  if (!user) throw new Error("User not found");
+  //2. compare the oldPassword store in the database
+  const isValidPw = compareHash(oldPassword, user?.password);
+  if (!isValidPw) throw new Error("Password mismatch");
+  //3. generate hash of new password
+  const password = genHash(newPassword);
+  //4. update the user data with new password
+  const updatedUser = await Model.findOneAndUpdate(
+    { email },
+    { password },
+    { new: true }
+  );
+  if (!updatedUser) throw new Error("Password Change failed");
+  return { data: null, msg: "Password Changed Successfully" };
+};
+
+const updateProfile = () => {}; // Special update case using role middleware
+
+// Admin Controllers
+const resetPassword = async ({ email, newPassword }) => {
+  //1. find the user using email; isBlocked; isActive
+  const user = await Model.findOne({ email, isActive: true, isBlocked: false });
+  if (!user) throw new Error("User not found");
+  //3. generate hash of new password
+  const password = genHash(newPassword);
+  //4. update the user data with new password
+  const updatedUser = await Model.findOneAndUpdate(
+    { email },
+    { password },
+    { new: true }
+  );
+  if (!updatedUser) throw new Error("Password Reset failed");
+  return { data: null, msg: "Password Reset Successfully" };
+};
+
+const blockUser = async ({ email }) => {
+  //1. find the user using email; isBlocked; isActive
+  const user = await Model.findOne({ email, isActive: true });
+  if (!user) throw new Error("User not found");
+  //4. update the user data with new block status
+  const updatedUser = await Model.findOneAndUpdate(
+    { email },
+    { isBlocked: !user?.isBlocked },
+    { new: true }
+  );
+  if (!updatedUser) throw new Error("User Block failed");
+  return {
+    data: { isBlocked: updatedUser?.isBlocked },
+    msg: `User ${
+      updatedUser?.isBlocked ? "blocked" : "unblocked"
+    } Successfully`,
+  };
+};
+
+const create = (payload) => {};
 const list = () => {}; // Advanced DB Operations
 const getById = () => {};
-const updateProfile = () => {};
+const updateById = () => {};
 
 module.exports = {
   create,
@@ -89,4 +173,5 @@ module.exports = {
   list,
   getById,
   updateProfile,
+  updateById,
 };
