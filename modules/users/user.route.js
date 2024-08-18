@@ -1,6 +1,7 @@
 const multer = require("multer");
 const router = require("express").Router();
 const Controller = require("./user.controller");
+const { secureAPI } = require("../../utils/secure");
 const { validate, forgetPasswordValidation } = require("./user.validation");
 
 const storage = multer.diskStorage({
@@ -66,16 +67,20 @@ router.post(
   }
 );
 
-router.put("/change-password", async (req, res, next) => {
-  try {
-    const result = await Controller.changePassword(req.body);
-    res.json(result);
-  } catch (e) {
-    next(e);
+router.put(
+  "/change-password",
+  secureAPI(["admin", "user"]),
+  async (req, res, next) => {
+    try {
+      const result = await Controller.changePassword(req.body);
+      res.json(result);
+    } catch (e) {
+      next(e);
+    }
   }
-});
+);
 
-router.put("/reset-password", async (req, res, next) => {
+router.put("/reset-password", secureAPI(["admin"]), async (req, res, next) => {
   try {
     const result = await Controller.resetPassword(req.body);
     res.json(result);
@@ -84,10 +89,49 @@ router.put("/reset-password", async (req, res, next) => {
   }
 });
 
-router.patch("/block", async (req, res, next) => {
+router.patch("/block", secureAPI(["admin"]), async (req, res, next) => {
   try {
     const result = await Controller.blockUser(req.body);
     res.json(result);
+  } catch (e) {
+    next(e);
+  }
+});
+
+router.post("/", secureAPI(["admin"]), async (req, res, next) => {
+  try {
+    const result = await Controller.create(req.body);
+    res.json({ data: result, msg: "User created successfully" });
+  } catch (e) {
+    next(e);
+  }
+});
+
+router.get("/:id", secureAPI(["admin"]), async (req, res, next) => {
+  try {
+    const result = await Controller.getById(req.params.id);
+    res.json({ data: result, msg: "User detail generated successfully" });
+  } catch (e) {
+    next(e);
+  }
+});
+
+router.put("/profile", secureAPI(["admin", "user"]), async (req, res, next) => {
+  try {
+    const result = await Controller.updateProfile(req.body);
+    res.json({ data: result, msg: "Profile updated successfully" });
+  } catch (e) {
+    next(e);
+  }
+});
+
+router.put("/:id", secureAPI(["admin"]), async (req, res, next) => {
+  try {
+    const result = await Controller.updateById({
+      id: req.params.id,
+      payload: req.body,
+    });
+    res.json({ data: result, msg: "User data updated successfully" });
   } catch (e) {
     next(e);
   }
