@@ -181,7 +181,63 @@ const updateById = async ({ id, payload }) => {
   }).select("-password");
 };
 
-const list = () => {}; // Advanced DB Operations (Aggregation)
+const list = async ({ filter, search, page = 1, limit = 10 }) => {
+  let currentPage = +page;
+  currentPage = currentPage < 1 ? 1 : currentPage;
+
+  const { name } = search;
+  // multiple filter (role, status)
+  // search
+  // sorting
+  // pagination
+  const query = [];
+  if (name) {
+    query.push({
+      $match: {
+        name: new RegExp(name, "gi"),
+      },
+    });
+  }
+
+  query.push(
+    {
+      $facet: {
+        metadata: [
+          {
+            $count: "total",
+          },
+        ],
+        data: [
+          {
+            $skip: (currentPage - 1) * +limit,
+          },
+          {
+            $limit: +limit,
+          },
+        ],
+      },
+    },
+    {
+      $addFields: {
+        total: {
+          $arrayElemAt: ["$metadata.total", 0],
+        },
+      },
+    },
+    {
+      $project: {
+        metadata: 0,
+      },
+    }
+  );
+  const result = await Model.aggregate(query);
+  return {
+    data: result[0]?.data,
+    page: +currentPage,
+    limit: +limit,
+    total: result[0].total || 0,
+  };
+}; // Advanced DB Operations (Aggregation)
 
 module.exports = {
   create,
