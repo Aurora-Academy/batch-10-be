@@ -1,4 +1,5 @@
 const { Schema, model } = require("mongoose");
+const { ObjectId } = Schema.Types;
 
 const schema = new Schema(
   {
@@ -11,8 +12,8 @@ const schema = new Schema(
     isActive: { type: Boolean, required: true, default: false },
     isBlocked: { type: Boolean, required: true, default: false },
     token: String,
-    created_by: String, // TODO: change data type
-    updated_by: String, // TODO: change data type
+    created_by: ObjectId, // TODO: change data type
+    updated_by: ObjectId, // TODO: change data type
   },
   {
     timestamps: true,
