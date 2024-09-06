@@ -35,4 +35,23 @@ const secureAPI = (sysRole = []) => {
   };
 };
 
-module.exports = { genHash, compareHash, secureAPI };
+const checkUser = async (req, res, next) => {
+  try {
+    const me = req.body.updated_by;
+    const user = await userModel.findOne({
+      _id: me,
+    });
+    if (!user) throw new Error("User not found");
+    const isAdmin = user?.roles.includes("admin");
+    if (!isAdmin) {
+      req.body.filter = {
+        created_by: me,
+      };
+    }
+    next();
+  } catch (e) {
+    next(e);
+  }
+};
+
+module.exports = { checkUser, genHash, compareHash, secureAPI };

@@ -93,7 +93,7 @@ router.patch("/:id", secureAPI(["admin"]), async (req, res, next) => {
 
 router.delete("/:number", secureAPI(["admin"]), async (req, res, next) => {
   try {
-    const result = await Controller.remove(req.params.id);
+    const result = await Controller.remove(req.params.number);
     res.json({
       data: result,
       msg: "Room deleted successfully",
