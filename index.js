@@ -1,4 +1,5 @@
 require("dotenv").config();
+const cors = require("cors");
 const express = require("express");
 const mongoose = require("mongoose");
 const morgan = require("morgan");
@@ -16,6 +17,7 @@ mongoose
     console.log("Database Error");
   });
 
+app.use(cors());
 app.use(express.json());
 app.use("/resources", express.static("public"));
 app.use(morgan("tiny"));
