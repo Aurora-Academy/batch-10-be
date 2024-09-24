@@ -3,7 +3,7 @@ const { ObjectId } = Schema.Types;
 const roomSchema = new Schema(
   {
     name: { type: String, required: true, unique: true },
-    created_by: { type: ObjectId, required: true },
+    created_by: { type: ObjectId, ref: "User", required: true },
     type: {
       type: String,
       enum: ["single", "double", "suite"],
