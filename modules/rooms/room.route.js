@@ -1,6 +1,18 @@
+const multer = require("multer");
 const router = require("express").Router();
 const { secureAPI } = require("../../utils/secure");
 const Controller = require("./room.controller");
+
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, "public/uploads/rooms");
+  },
+  filename: function (req, file, cb) {
+    cb(null, Date.now() + "." + file?.originalname.split(".")[1]);
+  },
+});
+
+const upload = multer({ storage }); // multer(opts)
 
 // Public
 router.get("/public", async (req, res, next) => {
@@ -55,17 +67,25 @@ router.get("/:id", secureAPI(["admin"]), async (req, res, next) => {
   }
 });
 
-router.post("/", secureAPI(["admin"]), async (req, res, next) => {
-  try {
-    const result = await Controller.create(req.body);
-    res.json({
-      data: result,
-      msg: "New room is added successfully",
-    });
-  } catch (e) {
-    next(e);
+router.post(
+  "/",
+  secureAPI(["admin"]),
+  upload.single("image"),
+  async (req, res, next) => {
+    try {
+      if (req.file) {
+        req.body.image = req.file.filename;
+      }
+      const result = await Controller.create(req.body);
+      res.json({
+        data: result,
+        msg: "New room is added successfully",
+      });
+    } catch (e) {
+      next(e);
+    }
   }
-});
+);
 
 router.put("/:id", secureAPI(["admin"]), async (req, res, next) => {
   try {

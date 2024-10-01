@@ -4,6 +4,7 @@ const roomSchema = new Schema(
   {
     name: { type: String, required: true, unique: true },
     created_by: { type: ObjectId, ref: "User", required: true },
+    image: String,
     type: {
       type: String,
       enum: ["single", "double", "suite"],
