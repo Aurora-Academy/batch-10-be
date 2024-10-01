@@ -13,7 +13,7 @@ const roomSchema = new Schema(
     price: {
       type: Number,
       min: [750, "Minimum room price is 750"],
-      max: [10000, "Minimum room price is 750"],
+      max: [10000, "Maximum room price is 10000"],
     },
     status: {
       type: String,
