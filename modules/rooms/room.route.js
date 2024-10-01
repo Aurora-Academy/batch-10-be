@@ -75,6 +75,7 @@ router.post(
     try {
       if (req.file) {
         req.body.image = req.file.filename;
+        req.body.updated_by = req.currentUser;
       }
       const result = await Controller.create(req.body);
       res.json({

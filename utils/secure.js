@@ -27,6 +27,7 @@ const secureAPI = (sysRole = []) => {
         throw new Error("User unauthorized");
       } else {
         req.body.updated_by = user?._id;
+        req.currentUser = user?._id;
         next();
       }
     } catch (e) {
