@@ -4,18 +4,21 @@ const roomModel = require("../rooms/room.model");
 const create = async (payload) => {
   const { updated_by, ...rest } = payload;
   rest.created_by = updated_by;
-  const isRoomAvailable = await roomModel.findOne({
-    _id: rest?.room,
-    status: "empty",
+  const rooms = rest?.rooms || [];
+  rooms.map(async (room) => {
+    const isRoomAvailable = await roomModel.findOne({
+      _id: room?.room,
+      status: "empty",
+    });
+    if (!isRoomAvailable) throw new Error("Room is not available");
+    await roomModel.findOneAndUpdate(
+      {
+        _id: room?.room,
+      },
+      { status: "booked" },
+      { new: true }
+    );
   });
-  if (!isRoomAvailable) throw new Error("Room is not available");
-  await roomModel.findOneAndUpdate(
-    {
-      _id: rest?.room,
-    },
-    { status: "booked" },
-    { new: true }
-  );
   return Model.create(rest);
 };
 
@@ -117,18 +120,20 @@ const removeOrder = async (orderNo) => {
     throw new Error(
       "Please change to refund status to complete the order deletion"
     );
-  const isRoomAvailable = await roomModel.findOne({
-    _id: rest?.room,
-    status: "booked",
+  const orderedRooms = order?.rooms || [];
+  orderedRooms.map(async (room) => {
+    const isRoomAvailable = await roomModel.findOne({
+      _id: room?.room,
+    });
+    if (!isRoomAvailable) throw new Error("Room is available");
+    await roomModel.findOneAndUpdate(
+      {
+        _id: room?.room,
+      },
+      { status: "empty" },
+      { new: true }
+    );
   });
-  if (!isRoomAvailable) throw new Error("Room is not available");
-  await roomModel.findOneAndUpdate(
-    {
-      _id: rest?.room,
-    },
-    { status: "empty" },
-    { new: true }
-  );
   return Model.deleteOne({ number: orderNo });
 };
 

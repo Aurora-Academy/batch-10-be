@@ -9,10 +9,18 @@ const orderSchema = new Schema(
       default: () => String(randomUUID()),
       required: true,
     },
-    receiver: { type: String, required: true },
+    name: { type: String, required: true },
+    email: { type: String, required: true },
+
     arrivalDate: { type: Date, required: true },
     departureDate: { type: Date, required: true },
-    room: { type: ObjectId, ref: "Room", required: true },
+    rooms: [
+      {
+        room: { type: ObjectId, ref: "Room", required: true },
+        price: { type: Number, required: true },
+        amount: { type: Number, required: true },
+      },
+    ],
     status: {
       type: String,
       enum: ["paid", "unpaid", "refund"],
