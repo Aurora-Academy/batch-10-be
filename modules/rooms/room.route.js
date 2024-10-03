@@ -57,10 +57,10 @@ router.get("/", secureAPI(["admin"]), async (req, res, next) => {
 
 router.get("/:id", secureAPI(["admin"]), async (req, res, next) => {
   try {
-    const result = await Controller.publicRooms(req.params.id);
+    const result = await Controller.getById(req.params.id);
     res.json({
       data: result,
-      msg: "All available rooms are shown successfully",
+      msg: "Room details are shown successfully",
     });
   } catch (e) {
     next(e);
@@ -90,17 +90,28 @@ router.post(
   }
 );
 
-router.put("/:id", secureAPI(["admin"]), async (req, res, next) => {
-  try {
-    const result = await Controller.updateById(req.params.id, req.body);
-    res.json({
-      data: result,
-      msg: "Room updated successfully",
-    });
-  } catch (e) {
-    next(e);
+router.put(
+  "/:id",
+  secureAPI(["admin"]),
+  upload.single("image"),
+  async (req, res, next) => {
+    try {
+      if (req.file) {
+        req.body.image = req.file.filename;
+        req.body.updated_by = req.currentUser;
+      } else {
+        req.body.updated_by = req.currentUser;
+      }
+      const result = await Controller.updateById(req.params.id, req.body);
+      res.json({
+        data: result,
+        msg: "Room updated successfully",
+      });
+    } catch (e) {
+      next(e);
+    }
   }
-});
+);
 
 router.patch("/:id", secureAPI(["admin"]), async (req, res, next) => {
   try {
