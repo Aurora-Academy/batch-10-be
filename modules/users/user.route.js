@@ -119,10 +119,10 @@ router.post("/", secureAPI(["admin"]), async (req, res, next) => {
   }
 });
 
-router.get("/:id", secureAPI(["admin"]), async (req, res, next) => {
+router.get("/profile", secureAPI(["admin", "user"]), async (req, res, next) => {
   try {
-    const result = await Controller.getById(req.params.id);
-    res.json({ data: result, msg: "User detail generated successfully" });
+    const result = await Controller.getProfile(req.body);
+    res.json({ data: result, msg: "Profile updated successfully" });
   } catch (e) {
     next(e);
   }
@@ -132,6 +132,15 @@ router.put("/profile", secureAPI(["admin", "user"]), async (req, res, next) => {
   try {
     const result = await Controller.updateProfile(req.body);
     res.json({ data: result, msg: "Profile updated successfully" });
+  } catch (e) {
+    next(e);
+  }
+});
+
+router.get("/:id", secureAPI(["admin"]), async (req, res, next) => {
+  try {
+    const result = await Controller.getById(req.params.id);
+    res.json({ data: result, msg: "User detail generated successfully" });
   } catch (e) {
     next(e);
   }

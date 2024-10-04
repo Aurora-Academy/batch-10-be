@@ -181,6 +181,14 @@ const updateById = async ({ id, payload }) => {
   }).select("-password");
 };
 
+const getProfile = async (payload) => {
+  const { updated_by: currentUser } = payload;
+  return await Model.findOne({ _id: currentUser })
+    .select("-password")
+    .select("-isActive")
+    .select("-isBlocked");
+};
+
 const list = async ({ filter, search, page = 1, limit = 10 }) => {
   let currentPage = +page;
   currentPage = currentPage < 1 ? 1 : currentPage;
@@ -267,5 +275,6 @@ module.exports = {
   list,
   getById,
   updateProfile,
+  getProfile,
   updateById,
 };
