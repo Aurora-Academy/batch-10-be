@@ -34,11 +34,10 @@ const list = async ({ filter, search, page = 1, limit = 10 }) => {
   if (filter?.status) {
     query.push({
       $match: {
-        isBlocked: filter?.status,
+        status: filter?.status,
       },
     });
   }
-
   if (number) {
     query.push({
       $match: {
@@ -46,20 +45,65 @@ const list = async ({ filter, search, page = 1, limit = 10 }) => {
       },
     });
   }
-
   query.push(
+    {
+      $unwind: {
+        path: "$rooms",
+      },
+    },
     {
       $lookup: {
         from: "rooms",
-        localField: "room",
+        localField: "rooms.room",
         foreignField: "_id",
-        as: "room",
+        as: "roomDetails",
       },
     },
     {
       $unwind: {
-        path: "$room",
-        preserveNullAndEmptyArrays: false,
+        path: "$roomDetails",
+      },
+    },
+    {
+      $group: {
+        _id: "$_id",
+        name: {
+          $first: "$name",
+        },
+        email: {
+          $first: "$email",
+        },
+        arrivalDate: {
+          $first: "$arrivalDate",
+        },
+        departureDate: {
+          $first: "$departureDate",
+        },
+        status: {
+          $first: "$status",
+        },
+        amount: {
+          $first: "$amount",
+        },
+        created_by: {
+          $first: "$created_by",
+        },
+        number: {
+          $first: "$number",
+        },
+        createdAt: {
+          $first: "$createdAt",
+        },
+        updatedAt: {
+          $first: "$updatedAt",
+        },
+        rooms: {
+          $push: {
+            price: "$rooms.price",
+            amount: "$rooms.amount",
+            room: "$roomDetails",
+          },
+        },
       },
     },
     {
